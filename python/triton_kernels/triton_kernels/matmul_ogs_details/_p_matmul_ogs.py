@@ -74,30 +74,6 @@ def _load_writeback_idx_and_mask(WriteBackIndx, writeback_size, offs, mask):
     mask = offs != -1
     return (offs, mask)
 
-# @triton.jit
-# def
-
-#             if X_TMA_MODE == "gather":
-#                 x = X.gather(offs_x_m, off_k)
-#             elif X_TMA_MODE == "dense":
-#                 x = X.load([start_z, start_m + off_m, off_k])
-#                 x = x.reshape(BLOCK_M, BLOCK_K)
-#             elif X_TMA_MODE == "ragged":
-#                 x = load_ragged(X, start_m, eM, [start_z, off_m, off_k], ragged_dim=1)
-#                 x = x.reshape(BLOCK_M, BLOCK_K)
-#             else:
-#                 tl.static_assert(X_TMA_MODE is None)
-#                 XPtrs = XBase + offs_x_m + offs_x_k
-#                 XBase += BLOCK_K * SPLIT_K * stride_x_k
-#                 mask_k = tl.arange(0, BLOCK_K) < K - off_k
-#                 if EVEN_K:
-#                     if SPLIT_K > 1:
-#                         x = tl.load(XPtrs, mask=mask_k[None, :], other=0.0)
-#                     else:
-#                         x = tl.load(XPtrs)
-#                 else:
-#                     x = tl.load(XPtrs, mask=mask_k[None, :], other=0.0)
-
 
 _matmul_ogs_repr = make_matmul_repr("_p_matmul_ogs", [0, 1, 2])
 @triton.jit(do_not_specialize=["TOKENS_PER_EXPT_FOR_ANNOTATION"],
