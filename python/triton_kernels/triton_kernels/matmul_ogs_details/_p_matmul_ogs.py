@@ -74,6 +74,30 @@ def _load_writeback_idx_and_mask(WriteBackIndx, writeback_size, offs, mask):
     mask = offs != -1
     return (offs, mask)
 
+# @triton.jit
+# def
+
+#             if X_TMA_MODE == "gather":
+#                 x = X.gather(offs_x_m, off_k)
+#             elif X_TMA_MODE == "dense":
+#                 x = X.load([start_z, start_m + off_m, off_k])
+#                 x = x.reshape(BLOCK_M, BLOCK_K)
+#             elif X_TMA_MODE == "ragged":
+#                 x = load_ragged(X, start_m, eM, [start_z, off_m, off_k], ragged_dim=1)
+#                 x = x.reshape(BLOCK_M, BLOCK_K)
+#             else:
+#                 tl.static_assert(X_TMA_MODE is None)
+#                 XPtrs = XBase + offs_x_m + offs_x_k
+#                 XBase += BLOCK_K * SPLIT_K * stride_x_k
+#                 mask_k = tl.arange(0, BLOCK_K) < K - off_k
+#                 if EVEN_K:
+#                     if SPLIT_K > 1:
+#                         x = tl.load(XPtrs, mask=mask_k[None, :], other=0.0)
+#                     else:
+#                         x = tl.load(XPtrs)
+#                 else:
+#                     x = tl.load(XPtrs, mask=mask_k[None, :], other=0.0)
+
 
 _matmul_ogs_repr = make_matmul_repr("_p_matmul_ogs", [0, 1, 2])
 @triton.jit(do_not_specialize=["TOKENS_PER_EXPT_FOR_ANNOTATION"],
@@ -173,8 +197,6 @@ def _p_matmul_ogs(
     USE_FLEXPOINT_SCALE: tl.constexpr = YActualScale is not None or YChecksumScale is not None
     HAS_SCATTER: tl.constexpr = WriteBackIndx is not None
     HAS_GATHER: tl.constexpr = GatherIndx is not None
-    USE_GATHER_TMA: tl.constexpr = HAS_GATHER and X_TMA_MODE == "dense"
-    USE_SCATTER_TMA: tl.constexpr = HAS_SCATTER and Y_TMA_MODE == "dense"
 
     if EPILOGUE_SUBTILE is None:
         SUBTILE_FACTOR: tl.constexpr = 1
@@ -211,10 +233,10 @@ def _p_matmul_ogs(
 
     # If true, do not share loop-carried variables between the prologue and the
     # epilogue to enable better pipelining with mmav5
-    INDEPENDENT_EPILOGUE: tl.constexpr = cuda_capability_geq(10, 0)
+    EPILOGUE_RECOMPUTE_TILE_ATTRS: tl.constexpr = cuda_capability_geq(10, 0)
 
     # start negative; will be incremented at the top of the loop
-    if INDEPENDENT_EPILOGUE:
+    if EPILOGUE_RECOMPUTE_TILE_ATTRS:
         tile_id1 = tl.program_id(0) - NUM_SMS
 
     # Keep track of local max for updating flexpoint scales.
@@ -237,7 +259,7 @@ def _p_matmul_ogs(
             if SPLIT_K > 1:
                 offs_x_k += pid_k.to(index_type) * BLOCK_K * stride_x_k
 
-        if USE_GATHER_TMA:
+        if X_TMA_MODE == "gather":
             offs_m = off_m + tl.arange(0, BLOCK_M)
             mask_m = offs_m < (M if M is not None else eM)
             if ExptData is None:
@@ -266,7 +288,7 @@ def _p_matmul_ogs(
             if GatherIndx is None:
                 XMxScalePtrs += start_m * stride_x_mx_m
             offs_k_scale = MX_SCALE_BLOCK_K * pid_k + tl.arange(0, MX_SCALE_BLOCK_K)
-            XMxScalePtrs += (offs_x_m if USE_GATHER_TMA else offs_m).to(index_type)[:, None] * stride_x_mx_m
+            XMxScalePtrs += (offs_x_m if X_TMA_MODE == "gather" else offs_m).to(index_type)[:, None] * stride_x_mx_m
             XMxScalePtrs += offs_k_scale.to(index_type)[None, :] * stride_x_mx_k
         else:
             XMxScalePtrs = None
@@ -278,13 +300,7 @@ def _p_matmul_ogs(
             off_k_mx = pid_k * MX_SCALE_BLOCK_K + ki * MX_SCALE_BLOCK_K * SPLIT_K
 
             # --- load x ---
-            if is_x_microscaled:
-                if EVEN_K:
-                    mask_k_scale = tl.full([MX_SCALE_BLOCK_K], True, dtype=tl.int1)
-                else:
-                    mask_k_scale = offs_k_scale < tl.cdiv(K, MX_PACK_DIVISOR)
-
-            if USE_GATHER_TMA:
+            if X_TMA_MODE == "gather":
                 x = X.gather(offs_x_m, off_k)
             elif X_TMA_MODE == "dense":
                 x = X.load([start_z, start_m + off_m, off_k])
@@ -295,15 +311,23 @@ def _p_matmul_ogs(
             else:
                 tl.static_assert(X_TMA_MODE is None)
                 XPtrs = XBase + offs_x_m + offs_x_k
-                XBase += BLOCK_K * SPLIT_K * stride_x_k
-                mask_k = tl.arange(0, BLOCK_K) < K - off_k
-                if EVEN_K:
-                    if SPLIT_K > 1:
-                        x = tl.load(XPtrs, mask=mask_k[None, :], other=0.0)
-                    else:
-                        x = tl.load(XPtrs)
+                if EVEN_K and SPLIT_K == 1:
+                    x = tl.load(XPtrs)
                 else:
+                    mask_k = tl.arange(0, BLOCK_K) < K - off_k
                     x = tl.load(XPtrs, mask=mask_k[None, :], other=0.0)
+
+            # --- load x_scale ---
+            if is_x_microscaled:
+                mask_k_scale = offs_k_scale < tl.cdiv(K, MX_PACK_DIVISOR)
+                if EVEN_K:
+                    x_scales = tl.load(XMxScalePtrs)
+                else:
+                    x_scales = tl.load(XMxScalePtrs, mask=mask_k_scale[None, :], other=0.0)
+            elif x.dtype == tl.float16 or x.dtype == tl.bfloat16:
+                x_scales: tl.constexpr = None
+            else:
+                x_scales = tl.full((BLOCK_M, BLOCK_K // MX_PACK_DIVISOR), 127, dtype=tl.uint8)
 
             # --- load w ---
             if W_TRANSPOSE:
@@ -313,15 +337,6 @@ def _p_matmul_ogs(
 
             # --- load w_scale ---
             if is_w_microscaled:
-                x_format: tl.constexpr = get_scaled_dot_format_string(x.dtype)
-                w_format: tl.constexpr = get_scaled_dot_format_string(w.dtype)
-
-                if is_x_microscaled:
-                    x_scales = tl.load(XMxScalePtrs, mask=mask_k_scale[None, :], other=0.0)
-                elif x_format == "fp16" or x_format == "bf16":
-                    x_scales: tl.constexpr = None
-                else:
-                    x_scales = tl.full((BLOCK_M, BLOCK_K // MX_PACK_DIVISOR), 127, dtype=tl.uint8)
                 if SWIZZLE_MX_SCALE == "BLACKWELL_SCALE":
                     flattened_expt_n_idx = expt_id * ((N + 127) // 128) + (off_n // 128)
                     w_scales = WMxScale.load([0, flattened_expt_n_idx, pid_k * MX_SCALE_BLOCK_K // 4 + ki * (MX_SCALE_BLOCK_K // 4 * SPLIT_K), 0, 0])
@@ -332,20 +347,24 @@ def _p_matmul_ogs(
                     w_scales = tl.reshape(w_scales, *w_scales.shape[1:]).T
 
             # --- update accumulator ---
-            if is_w_microscaled:
-                if SWAP_XW:
-                    acc = tl.dot_scaled(w.T, w_scales, w_format, x.T, x_scales, x_format, acc=acc, fast_math=True)
-                else:
-                    acc = tl.dot_scaled(x, x_scales, x_format, w, w_scales, w_format, acc=acc, fast_math=True)
-                if is_x_microscaled:
-                    XMxScalePtrs += (MX_SCALE_BLOCK_K * SPLIT_K) * stride_x_mx_k
-            else:
-                if SWAP_XW:
-                    acc = tl.dot(w.T, x.T, acc, max_num_imprecise_acc=MAX_NUM_IMPRECISE_ACC, allow_tf32=ALLOW_TF32)
-                else:
-                    acc = tl.dot(x, w, acc, max_num_imprecise_acc=MAX_NUM_IMPRECISE_ACC, allow_tf32=ALLOW_TF32)
+            if SWAP_XW:
+                x, w = w.T, x.T
 
-        if INDEPENDENT_EPILOGUE:
+            if is_w_microscaled:
+                x_format: tl.constexpr = get_scaled_dot_format_string(w.dtype if SWAP_XW else x.dtype)
+                w_format: tl.constexpr = get_scaled_dot_format_string(x.dtype if SWAP_XW else w.dtype)
+                x_scales, w_scales = (w_scales, x_scales) if SWAP_XW else (x_scales, w_scales)
+                acc = tl.dot_scaled(x, x_scales, x_format, w, w_scales, w_format, acc=acc, fast_math=True)
+            else:
+                acc = tl.dot(x, w, acc, max_num_imprecise_acc=MAX_NUM_IMPRECISE_ACC, allow_tf32=ALLOW_TF32)
+
+            # --- increment pointers ---
+            if X_TMA_MODE is None:
+                XBase += BLOCK_K * SPLIT_K * stride_x_k
+            if is_x_microscaled:
+                XMxScalePtrs += (MX_SCALE_BLOCK_K * SPLIT_K) * stride_x_mx_k
+
+        if EPILOGUE_RECOMPUTE_TILE_ATTRS:
             tile_id1 += NUM_SMS
             expt_id1, start_z1, start_m1, eM1, off_m1, off_n1, pid_k1 = _load_tile_attrs(
                 tile_id1, num_tiles, grid_m, grid_n, padding_m,
@@ -358,7 +377,7 @@ def _p_matmul_ogs(
 
         offs_m = off_m1 + tl.arange(0, BLOCK_M)
         mask_m = offs_m < (M if M is not None else eM1)
-        if USE_SCATTER_TMA:
+        if Y_TMA_MODE == "scatter":
             offs_y_m, mask_m = _load_writeback_idx_and_mask(WriteBackIndx, writeback_size, start_m1 + offs_m, mask_m)
             MASK_ACC: tl.constexpr = USE_FLEXPOINT_SCALE
             if SPLIT_K > 1:
@@ -374,7 +393,7 @@ def _p_matmul_ogs(
             MASK_ACC: tl.constexpr = USE_FLEXPOINT_SCALE
         else:
             offs_y_m = start_m1 + offs_m
-            MASK_ACC = False if USE_GATHER_TMA else USE_FLEXPOINT_SCALE
+            MASK_ACC = False if X_TMA_MODE == "gather" else USE_FLEXPOINT_SCALE
 
         # bias + scale
         offs_y_n = off_n1 + tl.arange(0, BLOCK_N)
@@ -457,7 +476,7 @@ def _p_matmul_ogs(
                 offs_y_n_scale = off_n1 // ACTIVATION_REDUCTION_N // MXFP_BLOCK_SIZE + a_i * MX_SCALE_BLOCK_N + tl.arange(0, MX_SCALE_BLOCK_N)
                 mask_n_scale = offs_y_n_scale < N_MX_BLOCK
                 offs_y_mx_k = 0
-                if USE_SCATTER_TMA:
+                if Y_TMA_MODE == "scatter":
                     # Convert -1 offsets to INT_MAX. We do this by clearing the leading bit. Note that
                     # there shouldn't be any other negative values.
                     offs_y_mx_z = 0
@@ -489,7 +508,7 @@ def _p_matmul_ogs(
                     out = EPILOGUE_FN(out, *epilogue_fn_args, target_dtype=YPtr.dtype.element_ty, pid=len(accs)*tile_id1 + a_i)
 
             out = out.to(YPtr.dtype.element_ty)
-            if USE_SCATTER_TMA:
+            if Y_TMA_MODE == "scatter":
                 # Convert -1 offsets to INT_MAX. We do this by clearing the leading bit. Note that
                 # there shouldn't be any other negative values.
                 offs_y_m = (offs_y_m.to(tl.uint32, bitcast=True) & 0x7FFFFFFF).to(tl.int32, bitcast=True)
