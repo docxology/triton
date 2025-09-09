@@ -347,12 +347,10 @@ def _p_matmul_ogs(
                     w_scales = tl.reshape(w_scales, *w_scales.shape[1:]).T
 
             # --- update accumulator ---
-            if SWAP_XW:
-                x, w = w.T, x.T
-
+            x, w = (w.T, x.T) if SWAP_XW else (x, w)
             if is_w_microscaled:
-                x_format: tl.constexpr = get_scaled_dot_format_string(w.dtype if SWAP_XW else x.dtype)
-                w_format: tl.constexpr = get_scaled_dot_format_string(x.dtype if SWAP_XW else w.dtype)
+                x_format: tl.constexpr = get_scaled_dot_format_string(x.dtype)
+                w_format: tl.constexpr = get_scaled_dot_format_string(w.dtype)
                 x_scales, w_scales = (w_scales, x_scales) if SWAP_XW else (x_scales, w_scales)
                 acc = tl.dot_scaled(x, x_scales, x_format, w, w_scales, w_format, acc=acc, fast_math=True)
             else:
