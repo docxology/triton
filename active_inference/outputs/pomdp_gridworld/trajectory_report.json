@@ -1,0 +1,31 @@
+{
+  "report_type": "trajectory",
+  "timestamp": "2025-09-19T14:41:12.459804",
+  "validation_summary": {
+    "data_completeness": {
+      "status": "PASS",
+      "missing_fields": [],
+      "total_timesteps": 50
+    },
+    "position_bounds": {
+      "status": "PASS",
+      "grid_size": 10,
+      "min_position": 0,
+      "max_position": 2
+    }
+  },
+  "data_analysis": {
+    "trajectory_metrics": {
+      "total_positions": 50,
+      "unique_true_positions": 3,
+      "unique_estimated_positions": 1,
+      "mean_position_error": 0.16,
+      "std_position_error": 0.463033476111609,
+      "max_position_error": 2.0
+    }
+  },
+  "quality_metrics": {},
+  "recommendations": [
+    "Trajectory data is complete and valid"
+  ]
+}

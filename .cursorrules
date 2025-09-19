@@ -1,0 +1,35 @@
+# Triton Active Inference Development Rules
+
+## Primary Development Areas
+- **@active_inference/**: Primary workspace for active inference and free energy principle implementations
+- **Rest of triton repo**: Available for reference and integration, but edits should primarily focus on @active_inference/
+
+## Modular Structure Requirements
+The @active_inference/ directory must maintain a clean modular structure:
+- `src/`: Core implementation modules
+- `tests/`: Comprehensive test suites with TDD approach
+- `docs/`: Documentation and specifications
+- `examples/`: Thin orchestrators for demonstrations
+
+## Development Goals
+1. **Complete Triton Feature Coverage**: Ensure all triton features can be configured, run, verified, reported, and visualized
+2. **Active Inference Methods**: Implement GPU-accelerated methods for:
+   - Variational free energy
+   - Expected free energy
+   - Message passing algorithms
+   - Bayesian inference methods
+   - Free energy principle implementations
+
+## Code Quality Standards
+- Use test-driven development (TDD) with unified modular approach
+- Maintain professional, functional, intelligent, wise, modular, concise, elegant code
+- Include clear documentation and comments
+- Follow all existing triton conventions and best practices
+- Avoid redundant code sections and scripts
+- Use real data analysis, no mock methods
+
+## Integration Approach
+- Thin orchestrators in examples/ should demonstrate full triton feature integration
+- Maintain compatibility with existing triton ecosystem
+- Focus on GPU acceleration for computational efficiency
+- Ensure reproducible and verifiable results

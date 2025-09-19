@@ -1,0 +1,7 @@
+{
+  "device": "mps",
+  "n_states": 1000,
+  "iterations": 5,
+  "final_belief_sum": 1.0354840755462646,
+  "final_belief_entropy": 6.287128448486328
+}

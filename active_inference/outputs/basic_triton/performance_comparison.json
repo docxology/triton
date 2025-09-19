@@ -1,0 +1,9 @@
+{
+  "device": "mps",
+  "sizes_tested": [
+    1000,
+    10000,
+    50000
+  ],
+  "note": "Performance comparison between PyTorch and Triton operations"
+}

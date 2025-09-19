@@ -1,0 +1,9 @@
+{
+  "device": "mps",
+  "add_time": 0.005717754364013672,
+  "mul_time": 0.0001480579376220703,
+  "sum_time": 0.0021538734436035156,
+  "add_correctness": 0.0,
+  "mul_correctness": 0.0,
+  "sum_correctness": 0.0
+}

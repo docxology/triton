@@ -1,0 +1,29 @@
+{
+  "report_type": "performance",
+  "timestamp": "2025-09-19T14:41:12.061427",
+  "validation_summary": {
+    "metrics_completeness": {
+      "status": "PASS",
+      "missing_metrics": []
+    }
+  },
+  "data_analysis": {
+    "performance_analysis": {
+      "position_accuracy": 0.88,
+      "performance_rating": "EXCELLENT"
+    },
+    "action_analysis": {
+      "action_distribution": [
+        0.46,
+        0.0,
+        0.54,
+        0.0
+      ],
+      "most_frequent_action": 2,
+      "action_entropy": 0.6899437582583995,
+      "exploration_balance": "BIASED"
+    }
+  },
+  "quality_metrics": {},
+  "recommendations": []
+}

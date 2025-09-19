@@ -1,0 +1,192 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "triton-active-inference"
+version = "0.1.0"
+description = "GPU-accelerated active inference and free energy principle implementations using Triton"
+readme = "docs/README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Triton Active Inference Team"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+keywords = [
+    "triton",
+    "gpu",
+    "active-inference",
+    "free-energy",
+    "bayesian",
+    "machine-learning",
+    "neuroscience",
+]
+requires-python = ">=3.12"
+dependencies = [
+    "torch>=2.0.0",
+    "numpy>=1.21.0",
+    "pytest>=7.0.0",
+    "matplotlib>=3.5.0",
+    "psutil>=5.8.0",
+    "seaborn>=0.11.0",
+    "pandas>=2.3.2",
+]
+
+[project.optional-dependencies]
+triton = [
+    "triton>=2.0.0; sys_platform != 'darwin' or platform_machine != 'arm64'",
+]
+dev = [
+    "black>=22.0.0",
+    "isort>=5.10.0",
+    "flake8>=4.0.0",
+    "mypy>=0.950",
+    "pre-commit>=2.17.0",
+]
+docs = [
+    "sphinx>=4.5.0",
+    "sphinx-rtd-theme>=1.0.0",
+    "myst-parser>=0.17.0",
+]
+test = [
+    "pytest-cov>=3.0.0",
+    "pytest-xdist>=2.5.0",
+    "hypothesis>=6.0.0",
+]
+
+[project.scripts]
+run-all-tests = "run_all_tests:main"
+run-all-examples = "run_all_examples:main"
+validate-triton = "validate_triton_usage:main"
+
+
+[tool.uv]
+dev-dependencies = [
+    "black>=22.0.0",
+    "isort>=5.10.0",
+    "flake8>=4.0.0",
+    "mypy>=0.950",
+    "pre-commit>=2.17.0",
+    "pytest-cov>=3.0.0",
+    "pytest-xdist>=2.5.0",
+    "hypothesis>=6.0.0",
+]
+
+[tool.uv.workspace]
+members = ["."]
+
+[project.urls]
+Homepage = "https://github.com/your-org/triton-active-inference"
+Documentation = "https://triton-active-inference.readthedocs.io/"
+Repository = "https://github.com/your-org/triton-active-inference"
+"Bug Reports" = "https://github.com/your-org/triton-active-inference/issues"
+"Source" = "https://github.com/your-org/triton-active-inference"
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["active_inference"]
+known_third_party = ["torch", "triton", "numpy", "pytest"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "torch.*",
+    "triton.*",
+    "matplotlib.*",
+    "pytest.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+]
+testpaths = ["tests"]
+markers = [
+    "gpu: marks tests that require GPU",
+    "slow: marks tests that are slow to run",
+    "integration: marks integration tests",
+    "triton: marks tests that require Triton",
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["active_inference"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "setup.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]

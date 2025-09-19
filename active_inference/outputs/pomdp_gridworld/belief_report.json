@@ -1,0 +1,32 @@
+{
+  "report_type": "belief",
+  "timestamp": "2025-09-19T14:41:11.704289",
+  "validation_summary": {
+    "entropy_range": {
+      "status": "PASS",
+      "expected_max": 6.214608098422191,
+      "actual_range": [
+        0.6752365231513977,
+        6.214602470397949
+      ]
+    }
+  },
+  "data_analysis": {
+    "entropy_analysis": {
+      "mean_entropy": 2.0661637938022612,
+      "std_entropy": 1.2825910387994885,
+      "min_entropy": 0.6752365231513977,
+      "max_entropy": 6.214602470397949,
+      "entropy_trend": "decreasing"
+    },
+    "efe_analysis": {
+      "total_efe_values": 200,
+      "mean_efe": 5.9279961363226175,
+      "std_efe": 7.190400375367693,
+      "min_efe": -1.4935094118118286,
+      "max_efe": 17.02231216430664
+    }
+  },
+  "quality_metrics": {},
+  "recommendations": []
+}

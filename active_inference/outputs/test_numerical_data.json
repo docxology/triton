@@ -1,0 +1,344 @@
+{
+  "numerical_metrics": {
+    "matrix_mult_time_ms": [
+      [
+        "core_gpu",
+        2.929210662841797
+      ]
+    ],
+    "vfe_mean": [
+      [
+        "free_energy",
+        0.6718748211860657
+      ],
+      [
+        "vfe_kernel",
+        0.5771355628967285
+      ]
+    ],
+    "best_policy": [
+      [
+        "free_energy",
+        0
+      ]
+    ],
+    "num_policies_tested": [
+      [
+        "free_energy",
+        5
+      ]
+    ],
+    "num_nodes": [
+      [
+        "message_passing",
+        5
+      ]
+    ],
+    "num_states": [
+      [
+        "message_passing",
+        3
+      ],
+      [
+        "bayesian_inference",
+        4
+      ]
+    ],
+    "final_entropy": [
+      [
+        "message_passing",
+        0.7963467836380005
+      ]
+    ],
+    "batch_size": [
+      [
+        "bayesian_inference",
+        16
+      ],
+      [
+        "vfe_kernel",
+        4
+      ],
+      [
+        "efe_kernel",
+        4
+      ]
+    ],
+    "evidence_mean": [
+      [
+        "bayesian_inference",
+        0.223722904920578
+      ],
+      [
+        "active_inference_engine",
+        0.25355708599090576
+      ]
+    ],
+    "entropy_mean": [
+      [
+        "bayesian_inference",
+        1.0216500759124756
+      ]
+    ],
+    "grid_size": [
+      [
+        "pomdp_functionality",
+        6
+      ]
+    ],
+    "n_states": [
+      [
+        "pomdp_functionality",
+        36
+      ]
+    ],
+    "n_actions": [
+      [
+        "pomdp_functionality",
+        4
+      ]
+    ],
+    "n_observations": [
+      [
+        "pomdp_functionality",
+        5
+      ]
+    ],
+    "initial_entropy": [
+      [
+        "pomdp_functionality",
+        3.5835185050964355
+      ]
+    ],
+    "most_likely_state": [
+      [
+        "pomdp_functionality",
+        0
+      ]
+    ],
+    "action_selected": [
+      [
+        "pomdp_functionality",
+        0
+      ]
+    ],
+    "free_energy_mean": [
+      [
+        "active_inference_engine",
+        107.71173095703125
+      ]
+    ],
+    "feature_dim": [
+      [
+        "vfe_kernel",
+        8
+      ],
+      [
+        "efe_kernel",
+        6
+      ]
+    ],
+    "num_policies": [
+      [
+        "efe_kernel",
+        8
+      ]
+    ],
+    "efe_mean": [
+      [
+        "efe_kernel",
+        0.5054429769515991
+      ]
+    ],
+    "return_code": [
+      [
+        "pytest_suite",
+        1
+      ]
+    ],
+    "stdout_lines": [
+      [
+        "pytest_suite",
+        429
+      ]
+    ],
+    "stderr_lines": [
+      [
+        "pytest_suite",
+        0
+      ]
+    ]
+  },
+  "test_results": {
+    "core_gpu": {
+      "device_type": "mps",
+      "tensor_allocation": true,
+      "matrix_mult_time_ms": 2.929210662841797,
+      "result_shape": [
+        1000,
+        200
+      ],
+      "success": true
+    },
+    "free_energy": {
+      "vfe_mean": 0.6718748211860657,
+      "efe_mean": NaN,
+      "best_policy": 0,
+      "num_policies_tested": 5,
+      "success": true
+    },
+    "message_passing": {
+      "num_nodes": 5,
+      "num_states": 3,
+      "converged": true,
+      "final_entropy": 0.7963467836380005,
+      "most_probable_states": [
+        1,
+        2,
+        2,
+        0,
+        1
+      ],
+      "success": true
+    },
+    "bayesian_inference": {
+      "batch_size": 16,
+      "num_states": 4,
+      "evidence_mean": 0.223722904920578,
+      "entropy_mean": 1.0216500759124756,
+      "normalization_ok": true,
+      "success": true
+    },
+    "pomdp_functionality": {
+      "grid_size": 6,
+      "n_states": 36,
+      "n_actions": 4,
+      "n_observations": 5,
+      "initial_entropy": 3.5835185050964355,
+      "most_likely_state": 0,
+      "action_selected": 0,
+      "success": true
+    },
+    "triton_integration": {
+      "kernel_creation": {
+        "success": false,
+        "reason": "Triton not available"
+      },
+      "device_management": {
+        "success": true,
+        "device_type": "mps",
+        "feature_manager_created": true
+      },
+      "feature_verification": {
+        "success": true,
+        "num_features": 4,
+        "feature_categories": [
+          "kernels",
+          "devices",
+          "dtypes",
+          "optimizations"
+        ]
+      },
+      "kernel_registration": {
+        "success": true,
+        "kernel_registered": true,
+        "kernel_verified": true
+      }
+    },
+    "active_inference_engine": {
+      "model_registered": true,
+      "free_energy_mean": 107.71173095703125,
+      "evidence_mean": 0.25355708599090576,
+      "posterior_shape": [
+        16,
+        4
+      ],
+      "success": true
+    },
+    "vfe_kernel": {
+      "batch_size": 4,
+      "feature_dim": 8,
+      "vfe_mean": 0.5771355628967285,
+      "posterior_update_success": true,
+      "success": true
+    },
+    "efe_kernel": {
+      "batch_size": 4,
+      "num_policies": 8,
+      "feature_dim": 6,
+      "efe_mean": 0.5054429769515991,
+      "policy_selection_success": true,
+      "success": true
+    },
+    "pytest_suite": {
+      "return_code": 1,
+      "success": false,
+      "stdout_lines": 429,
+      "stderr_lines": 0
+    },
+    "broader_triton_tests": {
+      "apple_silicon_skip": true,
+      "reason": "Broader Triton tests require CUDA and don't work on Apple Silicon MPS",
+      "test_categories_skipped": [
+        "Triton",
+        "TritonGPU",
+        "TritonNvidiaGPU",
+        "Conversion",
+        "Analysis"
+      ]
+    },
+    "package_level_tests": {
+      "apple_silicon_skip": true,
+      "reason": "Package-level Triton tests require CUDA and don't work on Apple Silicon MPS",
+      "tests_skipped": [
+        "lit_tests",
+        "python_unit_tests",
+        "kernel_comparison"
+      ]
+    },
+    "triton_validation": {
+      "success": true,
+      "validation_completed": true,
+      "triton_usage_verified": true
+    },
+    "performance_validation": {
+      "our_kernels": {
+        "vector_add": {
+          "error": "Kernel creation failed"
+        },
+        "matmul": {
+          "error": "Kernel creation failed"
+        }
+      },
+      "pytorch_baseline": {
+        "vector_add_time": 1.0800361633300782e-06,
+        "size": 10000
+      },
+      "pytorch_matmul": {
+        "matmul_time": 0.00014200210571289063,
+        "size": "500x500x500"
+      },
+      "success": true
+    },
+    "ecosystem_compatibility": {
+      "triton_version": {
+        "available": false,
+        "error": "Triton not installed"
+      },
+      "pytorch": {
+        "version": "2.8.0",
+        "cuda_available": false,
+        "mps_available": true
+      },
+      "kernel_compilation": {
+        "success": false,
+        "reason": "Triton not available"
+      }
+    }
+  },
+  "metadata": {
+    "timestamp": "2025-09-19T12:40:59.184074",
+    "total_tests": 15,
+    "metrics_count": 24
+  }
+}

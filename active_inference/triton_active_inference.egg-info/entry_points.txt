@@ -1,0 +1,4 @@
+[console_scripts]
+run-all-examples = run_all_examples:main
+run-all-tests = run_all_tests:main
+validate-triton = validate_triton_usage:main
